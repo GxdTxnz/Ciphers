@@ -1,2 +1,3 @@
-##  :~# make  
-##  :~# ./kasumi_test
+##  Usage:
+    1. ~ make
+    2. ~./kasumi_test
