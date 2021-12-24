@@ -1,0 +1,2 @@
+##  :~# make  
+##  :~# ./kasumi_test
