@@ -16,7 +16,8 @@
 using namespace std;
 using namespace CryptoPP;
 
-int main() {
+int main() 
+{
     // Ввод пароля
     string password;
     cout << "Введите пароль: ";
@@ -36,40 +37,103 @@ int main() {
     PKCS5_PBKDF2_HMAC<SHA1> pbkdf2;
     pbkdf2.DeriveKey(key, key.size(), 0, (byte*)password.data(), password.size(), (byte*)salt.data(), salt.size(), iterations);
 
-    // Открытие файла с исходными данными
-    string input_file = "input.txt";
-    ifstream ifs(input_file, ios::binary);
-    if (!ifs) {
-        cerr << "Не удалось открыть файл с исходными данными." << endl;
+    int choice;
+    cout << "Выберите действие: " << endl;
+    cout << "1. Зашифровать данные" << endl;
+    cout << "2. Расшифровать данные" << endl;
+    cout << "Ваш выбор: ";
+    cin >> choice;
+
+    if (choice == 1) 
+    {
+        // Ввод имени файла с исходными данными
+        string input_file;
+        cout << "Введите имя файла с исходными данными: ";
+        cin >> input_file;
+        
+        // Открытие файла с исходными данными
+        ifstream ifs(input_file, ios::binary);
+        if (!ifs) 
+        {
+            cerr << "Не удалось открыть файл с исходными данными." << endl;
+            return 1;
+        }
+
+        // Чтение данных из файла
+        string data((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
+
+        // Шифрование данных с использованием AES-128 в режиме ECB
+        string ciphertext;
+        ECB_Mode<AES>::Encryption e;
+        e.SetKey(key, key.size());
+        StringSource(data, true,
+            new StreamTransformationFilter(e,
+                new StringSink(ciphertext)
+            )
+        );
+
+        // Запись зашифрованных данных в файл
+        string output_file = "output.txt";
+        ofstream ofs(output_file, ios::binary);
+        if (!ofs) 
+        {
+            cerr << "Не удалось создать файл для записи зашифрованных данных." << endl;
+            return 1;
+        }
+        ofs << ciphertext;
+        ofs.close();
+
+        cout << "Исходные данные: " << data.size() << " байт" << endl;
+        cout << "Зашифрованные данные: " << ciphertext.size() << " байт" << endl;
+        cout << "Зашифрованные данные записаны в файл: " << output_file << endl;
+    } 
+    else if (choice == 2) 
+    {
+        // Ввод имени файла с зашифрованными данными
+        string input_file;
+        cout << "Введите имя файла с зашифрованными данными: ";
+        cin >> input_file;
+        // Открытие файла с зашифрованными данными
+        ifstream ifs(input_file, ios::binary);
+        if (!ifs) 
+        {
+            cerr << "Не удалось открыть файл с зашифрованными данными." << endl;
+            return 1;
+        }
+
+        // Чтение зашифрованных данных из файла
+        string ciphertext((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
+
+        // Расшифрование данных с использованием AES-128 в режиме ECB
+        string decryptedtext;
+        ECB_Mode<AES>::Decryption d;
+        d.SetKey(key, key.size());
+        StringSource(ciphertext, true,
+            new StreamTransformationFilter(d,
+                new StringSink(decryptedtext)
+            )
+        );
+
+        // Запись расшифрованных данных в файл
+        string output_file = "output.txt";
+        ofstream ofs(output_file, ios::binary);
+        if (!ofs) 
+        {
+            cerr << "Не удалось создать файл для записи расшифрованных данных." << endl;
+            return 1;
+        }
+        ofs << decryptedtext;
+        ofs.close();
+
+        cout << "Зашифрованные данные: " << ciphertext.size() << " байт" << endl;
+        cout << "Расшифрованные данные: " << decryptedtext.size() << " байт" << endl;
+        cout << "Расшифрованные данные записаны в файл: " << output_file << endl;
+    } 
+    else 
+    {
+        cout << "Некорректный выбор. Выход из программы." << endl;
         return 1;
     }
-
-    // Чтение данных из файла
-    string data((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
-
-    // Шифрование данных с использованием AES-128 в режиме ECB
-    string ciphertext;
-    ECB_Mode<AES>::Encryption e;
-    e.SetKey(key, key.size());
-    StringSource(data, true,
-        new StreamTransformationFilter(e,
-            new StringSink(ciphertext)
-        )
-    );
-
-    // Запись зашифрованных данных в файл
-    string output_file = "output.txt";
-    ofstream ofs(output_file, ios::binary);
-    if (!ofs) {
-        cerr << "Не удалось создать файл для записи зашифрованных данных." << endl;
-        return 1;
-    }
-    ofs << ciphertext;
-    ofs.close();
-
-    cout << "Исходные данные: " << data.size() << " байт" << endl;
-    cout << "Зашифрованные данные: " << ciphertext.size() << " байт" << endl;
-    cout << "Зашифрованные данные записаны в файл: " << output_file << endl;
 
     return 0;
 }
